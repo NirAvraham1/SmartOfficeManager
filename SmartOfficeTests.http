@@ -9,8 +9,8 @@ POST {{identityUrl}}/auth/register
 Content-Type: {{contentType}}
 
 {
-  "username": "NirTester",
-  "passwordHash": "Test123456",
+  "username": "admin",
+  "passwordHash": "pass123",
   "role": "Admin"
 }
 
@@ -23,8 +23,8 @@ POST {{identityUrl}}/auth/login
 Content-Type: {{contentType}}
 
 {
-  "username": "NirTester",
-  "passwordHash": "Test123456"
+  "username": "admin",
+  "passwordHash": "pass123"
 }
 
 ### שמירת הטוקן מהתגובה לשימוש אוטומטי בהמשך

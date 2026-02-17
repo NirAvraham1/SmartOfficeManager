@@ -6,13 +6,10 @@ import type { Asset } from '../models/asset';
 const IDENTITY_URL = 'http://localhost:5197';
 const RESOURCE_URL = 'http://localhost:5259';
 
+axios.defaults.withCredentials = true;
+
 const responseBody = <T>(response: AxiosResponse<T>) => response.data;
 
-axios.interceptors.request.use(config => {
-    const token = window.localStorage.getItem('jwt');
-    if (token && config.headers) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
 
 const requests = {
     get: <T>(url: string) => axios.get<T>(url).then(responseBody),

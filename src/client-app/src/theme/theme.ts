@@ -3,15 +3,15 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1a237e', // Deep Navy Blue
+      main: '#1a237e', 
       light: '#534bae',
       dark: '#000051',
     },
     secondary: {
-      main: '#00b0ff', // Vivid Blue
+      main: '#00b0ff', 
     },
     background: {
-      default: '#f4f6f8', // Light Grey background for the whole app
+      default: '#f4f6f8', 
     },
   },
   typography: {
@@ -29,7 +29,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          textTransform: 'none', // No all-caps buttons (more modern)
+          textTransform: 'none', 
           fontWeight: 600,
         },
       },

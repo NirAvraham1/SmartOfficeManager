@@ -28,23 +28,31 @@ namespace IdentityAuthService.Controllers
             if (await _userRepository.UserExistsAsync(user.Username))
                 return BadRequest("User already exists");
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-        
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
+    
             await _userRepository.AddAsync(user);
-
             return Ok("User registered successfully");
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] User loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await _userRepository.GetByUsernameAsync(loginDto.Username);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.PasswordHash, user.PasswordHash))
-                return Unauthorized("Invalid username or password");
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+                return Unauthorized("Invalid credentials");
 
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token });
+
+            var cookieOptions = new CookieOptions {
+                HttpOnly = true,   
+                Secure = true,      
+                SameSite = SameSiteMode.Strict, 
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            Response.Cookies.Append("jwt", token, cookieOptions);
+
+            return Ok(new { user.Username, user.Role });
         }
     
 

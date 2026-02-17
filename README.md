@@ -1,56 +1,69 @@
-**Smart Office Management System - Microservices Project**
+# 🏢 Smart Office Management System
 
-**Overview**
-This project is a distributed system for managing office assets. It demonstrates a microservices architecture using .NET 9, React with TypeScript, and polyglot persistence (SQL + NoSQL).
+## **Overview**
+A distributed, **Enterprise-grade** microservices system designed for managing office assets. This project demonstrates a robust full-stack architecture focusing on high security, system resilience, and polyglot persistence. Developed as part of a B.Sc. in Computer Science at Afeka College.
 
-**Key Features**
-    **Identity Service:** Handles Auth via PostgreSQL and ASP.NET Identity.
-    **Resource Service:** Manages office assets using MongoDB.
-    **Security:** Cross-service JWT validation and Role-Based Access Control (RBAC).
-    **Frontend:** Professional Enterprise Dashboard built with MUI 5, Tailwind CSS, and MobX.
+---
 
-1. **Run Guide**
-**Prerequisites**
-    Docker Desktop installed.
-    Ports 5173 (Frontend), 5197 (Auth), and 5259 (Resource) must be available.
+## 🛠 **Technical Stack**
 
-**Execution**
-1. Open a terminal in the project root directory.
-2. Run the following command:
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 18 (TypeScript), MobX, MUI 5, Tailwind CSS |
+| **Identity Service** | .NET 9 Web API, PostgreSQL, Entity Framework Core |
+| **Resource Service** | .NET 9 Web API, MongoDB, Repository Pattern |
+| **Infrastructure** | Docker, Docker Compose, Nginx |
+
+---
+
+## 🚀 **Quick Start Guide**
+
+### **Prerequisites**
+* **Docker Desktop** installed and running.
+* Available Ports: `5173` (UI), `5197` (Auth), `5259` (Resources).
+
+### **Execution**
+1.  Open a terminal in the project root directory.
+2.  Run the following command:
     docker-compose up --build
+    
+3.  **Access Points:**
+    * **Frontend UI:** [http://localhost:5173](http://localhost:5173)
+    * **Auth API (Swagger):** [http://localhost:5197/swagger](http://localhost:5197/swagger)
+    * **Resource API (Swagger):** [http://localhost:5259/swagger](http://localhost:5259/swagger)
 
-**Once all containers are healthy:**
-    UI Access: http://localhost:5173
-    Auth API Swagger: http://localhost:5197/swagger
-    Resource API Swagger: http://localhost:5259/swagger
+---
 
-**Testing the Flow**
-1. **Register:** Create a new user (Admin or Member) via the UI or the provided .http files.
-2. **Login:** Authenticate to receive a JWT.
-3. **Dashboard:**
-    Admins can view, add (free text categories), and manage assets.
-    Members can only view assets (the "Add" functionality is hidden and server-side protected).
+## 🛡 **Security & Architecture Highlights**
 
-2. **Reflections & Technical Difficulties**
+* **HttpOnly Cookies:** Transitioned from LocalStorage to HttpOnly Cookies for JWT storage, providing high-level protection against XSS attacks.
+* **Repository Pattern:** Implemented a clean separation between API Controllers and data access layers to ensure testability and decouple business logic from DB providers.
+* **System Resilience:** Integrated **Exponential Backoff** logic in service startup to handle database readiness within the Docker network.
+* **RBAC (Role-Based Access Control):** Granular permission management where **Admins** can manage assets while **Members** are restricted to read-only access, enforced at both UI and API levels.
 
-**Database Integration & Identity**
-Issue: Initially, the Identity service failed to connect to the database within the Docker environment due to missing dependencies and incorrect ApplicationUser mapping.
-Solution: Refactored the ApplicationUser class to extend IdentityUser and ensured all necessary NuGet packages were explicitly included in the .csproj for the Docker build.
+---
 
-**Hybrid Styling Integration (MUI + Tailwind)**
-Issue: Integrating a modern "SaaS-style" layout (Tailwind) with functional MUI 5 components caused layout constraints, resulting in "dead space" on the screen and restricted widths.
-Solution: Refactored the global CSS and App.tsx to remove boilerplate max-width limitations. Successfully merged MUI’s functional components (like TextField and Button) with Tailwind’s utility classes to create a full-width, responsive UI.
+## 🧠 **Reflections & Technical Challenges**
 
-**Polyglot Persistence (SQL vs NoSQL)**
-Issue: Ensuring data isolation while maintaining a unified UI experience.
-Solution: Implemented two distinct services where the Auth service owns the PostgreSQL instance and the Resource service owns the MongoDB instance, demonstrating true microservices independence.
+### **1. The Security Pivot (JWT vs. Cookies)**
+**Issue:** Initial implementation used LocalStorage, exposing the system to potential script-based token theft.
+**Solution:** Refactored the authentication flow to utilize **HttpOnly Cookies**. This involved complex CORS configuration (`AllowCredentials`) and updating Axios to support credentialed requests (`withCredentials: true`).
 
-3. **Tooling Disclosure**
-**Architectural & Debugging Assistance:** Developed with the assistance of Gemini (Google AI) for system architecture design, Docker configuration, and backend-frontend integration.
-**UI/UX Prototyping:** Used Stitch for modern UI/UX design concepts, which were then manually adapted into React components.
-**UI Frameworks:** Material UI (MUI) 5 and Tailwind CSS.
+### **2. Type Safety & Model Syncing**
+**Issue:** Encountered `401 Unauthorized` and build errors (CS0029) due to mismatched user models (`User` vs `ApplicationUser`).
+**Solution:** Unified the domain models and used `[JsonPropertyName]` attributes to sync field naming between React (camelCase) and C# (PascalCase), ensuring perfect JSON serialization.
 
-**External Resources:**
-1. MUI Documentation
-2. Microsoft Identity Documentation
-3. MobX State Management
+### **3. SPA Routing & Docker Deployment**
+**Issue:** Hard-reloading the Dashboard resulted in Nginx 404 errors because the server was looking for physical files for client-side routes.
+**Solution:** Implemented **Conditional Rendering** based on the MobX state in `App.tsx`. This removed reliance on complex Nginx `try_files` rules and provided a faster, state-driven user experience.
+
+### **4. Database Race Conditions**
+**Issue:** Microservices failed to start if the Backend reached out to databases before they were "Ready" in the Docker container.
+**Solution:** Developed a retry policy using **Exponential Backoff** (2s, 4s, 8s...) to ensure services wait gracefully for the infrastructure to stabilize.
+
+---
+
+## 🧪 **Tooling & Resources**
+* **AI Collaboration:** Developed with architectural and debugging assistance from **Gemini (Google AI)**.
+* **UI/UX Concept:** Prototyped using **Stitch** for a modern SaaS dashboard feel.
+* **Documentation:** MUI Docs, Microsoft Identity Best Practices.

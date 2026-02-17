@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization; 
 
 namespace IdentityAuthService.Models
 {
@@ -8,13 +10,17 @@ namespace IdentityAuthService.Models
         public int Id { get; set; }
 
         [Required]
+        [JsonPropertyName("username")]
         public string Username { get; set; } = string.Empty;
 
-        [Required]
+        [NotMapped] 
+        [JsonPropertyName("password")]
+        public string Password { get; set; } = string.Empty;
+
         public string PasswordHash { get; set; } = string.Empty;
 
         [Required]
-        // תפקיד המשתמש: Admin או Member כפי שנדרש במטלה
+        [JsonPropertyName("role")]
         public string Role { get; set; } = "Member"; 
     }
 }

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MongoDB.Driver;
-using System.IdentityModel.Tokens.Jwt; // נדרש לניקוי מפת ה-Claims
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,46 +12,43 @@ builder.Services.AddCors(opt => {
         policy.AllowAnyHeader()
               .AllowAnyMethod()
               .WithOrigins("http://localhost:5173")
-              .AllowCredentials();
+              .AllowCredentials(); 
     });
 });
 
-// 2. הוספת שירות Health Checks (ניטור תקינות עבור Docker)
+// 2. Health Checks
 builder.Services.AddHealthChecks();
 
 builder.Services.AddControllers();
 
-// 3. MongoDB Configuration with Resilience (Exponential Backoff)
+// 3. MongoDB Configuration with Resilience
 var mongoSettings = builder.Configuration.GetSection("MongoDbSettings");
 var mongoClient = new MongoClient(mongoSettings["ConnectionString"]);
 var database = mongoClient.GetDatabase(mongoSettings["DatabaseName"]);
 
-// בדיקת חיבור ל-MongoDB בזמן עליית השירות
 int maxRetries = 5;
 int delay = 2000;
 for (int i = 1; i <= maxRetries; i++)
 {
     try
     {
-        // ניסיון ביצוע פקודה פשוטה כדי לוודא שה-DB זמין
         database.RunCommand((Command<MongoDB.Bson.BsonDocument>)"{ping:1}");
         Console.WriteLine("--> Connected to MongoDB successfully.");
         break;
     }
-    catch (Exception ex)
+    catch (Exception)
     {
         if (i == maxRetries) throw;
-        Console.WriteLine($"--> Attempt {i} failed: MongoDB not ready. Retrying in {delay/1000}s...");
+        Console.WriteLine($"--> Attempt {i} failed: MongoDB not ready. Retrying...");
         Thread.Sleep(delay);
-        delay *= 2; // Exponential Backoff
+        delay *= 2;
     }
 }
 
 builder.Services.AddSingleton(database);
 builder.Services.AddScoped<IAssetRepository, MongoAssetRepository>();
 
-// 4. JWT Authentication Setup
-// חשוב: מניעת שינוי שמות ה-Claims (כדי ש-Role יעבוד כמו שצריך)
+// 4. JWT Authentication Setup (מעודכן ל-Cookies)
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -70,6 +67,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["jwt"];
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -81,7 +87,6 @@ app.UseRouting();
 
 app.UseCors("CorsPolicy"); 
 
-// חשיפת נקודת קצה לבדיקת תקינות
 app.MapHealthChecks("/health");
 
 app.UseAuthentication();

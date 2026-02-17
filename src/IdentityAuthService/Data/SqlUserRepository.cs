@@ -1,5 +1,5 @@
-using IdentityAuthService.Models;
 using Microsoft.EntityFrameworkCore;
+using IdentityAuthService.Models;
 
 namespace IdentityAuthService.Data
 {
@@ -19,7 +19,7 @@ namespace IdentityAuthService.Data
 
         public async Task AddAsync(User user)
         {
-            _context.Users.Add(user);
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 

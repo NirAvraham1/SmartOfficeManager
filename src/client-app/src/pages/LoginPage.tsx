@@ -17,7 +17,6 @@ export default observer(function LoginPage() {
     };
 
     return (
-        /* שימוש ב-w-screen כדי להבטיח תפיסת כל רוחב המסך */
         <div className="font-['Inter'] bg-[#f6f6f8] text-gray-900 h-screen w-screen flex overflow-hidden fixed inset-0">
             
             {/* Left Panel: Visual/Branding (Hidden on mobile) */}

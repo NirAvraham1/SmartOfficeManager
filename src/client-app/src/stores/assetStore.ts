@@ -5,7 +5,6 @@ import agent from "../api/agent";
 export default class AssetStore {
     assets: Asset[] = [];
     loading = false;
-    // שדות חדשים עבור ה-Pagination
     totalCount = 0;
     pageSize = 10;
     currentPage = 1;
@@ -14,11 +13,9 @@ export default class AssetStore {
         makeAutoObservable(this);
     }
 
-    // מימוש ה-Pagination וה-Caching (Stale-While-Revalidate)
     loadAssets = async () => {
         this.loading = true;
 
-        // שלב 1: טעינה מהירה מה-Cache (רק בדף הראשון)
         const cachedData = localStorage.getItem('assets_cache');
         if (cachedData && this.currentPage === 1) {
             runInAction(() => {
@@ -26,16 +23,13 @@ export default class AssetStore {
             });
         }
 
-        try {
-            // שלב 2: פנייה ל-API עם פרמטרי הדף והגודל
-            const data: any = await agent.Assets.list(this.currentPage, this.pageSize);
+        try {            const data: any = await agent.Assets.list(this.currentPage, this.pageSize);
             
             runInAction(() => {
                 this.assets = data.items;
                 this.totalCount = data.totalCount;
                 this.loading = false;
                 
-                // שלב 3: עדכון ה-Cache עבור הדף הראשון
                 if (this.currentPage === 1) {
                     localStorage.setItem('assets_cache', JSON.stringify(data.items));
                 }
@@ -46,14 +40,11 @@ export default class AssetStore {
         }
     }
 
-    // הפונקציה שהייתה חסרה - יצירת Asset חדש
     createAsset = async (asset: Asset) => {
         try {
             const newAsset = await agent.Assets.create(asset);
             runInAction(() => {
-                // הוספת הנכס החדש לרשימה המקומית
                 this.assets.push(newAsset);
-                // עדכון ה-TotalCount כדי שהדפדוף יישאר מסונכרן
                 this.totalCount++;
             });
         } catch (error) {
