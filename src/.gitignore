@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# .NET
+bin/
+obj/
+publish/
+.vs/
+.vscode/
+*.user
+*.suo
+*.db
+appsettings.Development.json
+
+# Node / React
+node_modules/
+dist/
+.eslintcache
+*.log
+npm-debug.log*
+
+# Docker
+.dockerignore

@@ -1,0 +1,70 @@
+services:
+  db-identity:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  identity-service:
+    build: ./IdentityAuthService
+    restart: always
+    ports:
+      - "5197:8080" 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${APP_ENV}
+      - ConnectionStrings__DefaultConnection=Host=db-identity;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+    depends_on:
+      db-identity:
+        condition: service_healthy
+
+  db-resource:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  resource-service:
+    build: ./ResourceManagementService
+    restart: always
+    ports:
+      - "5259:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${APP_ENV}
+      - MongoDbSettings__ConnectionString=mongodb://db-resource:${MONGO_PORT}
+      - MongoDbSettings__DatabaseName=${MONGO_DB_NAME}
+    depends_on:
+      db-resource:
+        condition: service_healthy
+
+  frontend:
+    build: ./client-app
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - identity-service
+      - resource-service
+
+volumes:
+  postgres_data:
+  mongo_data:

@@ -1,0 +1,75 @@
+### הגדרת משתנים
+@identityUrl = http://localhost:5197
+@resourceUrl = http://localhost:5259
+@contentType = application/json
+
+### 1. רישום משתמש MEMBER חדש
+# דרישה: תפקיד Member (לא מורשה להוסיף/למחוק נכסים)
+POST {{identityUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "NirMember",
+  "passwordHash": "Member123!",
+  "role": "Member"
+}
+
+###
+
+### 2. התחברות לקבלת טוקן של Member
+# @name loginMember
+POST {{identityUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "NirMember",
+  "passwordHash": "Member123!"
+}
+
+### שמירת הטוקן של הממבר
+@memberToken = {{loginMember.response.body.token}}
+
+###
+
+### בדיקת אבטחה: ניסיון הוספת נכס כמשתמש רגיל (Member)
+# אנחנו מצפים לקבל 403 Forbidden
+POST http://localhost:5259/assets
+Content-Type: application/json
+Authorization: Bearer {{memberToken}}
+
+{
+  "name": "Hacker Desk",
+  "type": "Illegal"
+}
+
+### 3. צפייה בנכסים (מורשה ל-Member)
+# בדיקת דרישה: GET /resources צריך לעבוד לכולם
+GET {{resourceUrl}}/assets
+Authorization: Bearer {{memberToken}}
+
+###
+
+### 4. ניסיון הוספת נכס (חסימה - Security Test)
+# בדיקת דרישה: POST /resources - מורשה ל-Admin בלבד.
+# צפי: המערכת צריכה להחזיר 403 Forbidden
+POST {{resourceUrl}}/assets
+Content-Type: {{contentType}}
+Authorization: Bearer {{memberToken}}
+
+{
+  "name": "I should not be able to add this",
+  "type": "IllegalAccess"
+}
+
+###
+
+### 5. ניסיון מחיקת נכס (חסימה - Security Test)
+# בדיקת דרישה: DELETE /resources/{id} - מורשה ל-Admin בלבד.
+# צפי: המערכת צריכה להחזיר 403 Forbidden
+# החלף את ה-ID ב-ID אמיתי שקיבלת מה-GET
+DELETE {{resourceUrl}}/assets/65cb7e32a1b2c3d4e5f6g7h8
+Authorization: Bearer {{memberToken}}
+
+### בדיקת אבטחה: ניסיון גישה ללא טוקן
+# אנחנו מצפים לקבל 401 Unauthorized
+GET http://localhost:5259/assets

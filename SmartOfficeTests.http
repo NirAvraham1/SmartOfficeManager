@@ -1,0 +1,57 @@
+### הגדרת משתנים
+@identityUrl = http://localhost:5197
+@resourceUrl = http://localhost:5259
+@contentType = application/json
+
+### 1. רישום משתמש אדמין חדש (Register)
+# דרישה: שם, סיסמה מוצפנת ותפקיד (Admin/Member) [cite: 10]
+POST {{identityUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "NirTester",
+  "passwordHash": "Test123456",
+  "role": "Admin"
+}
+
+###
+
+### 2. התחברות לקבלת JWT Token (Login)
+# דרישה: החזרת טוקן עם UserID ו-Role [cite: 11]
+# @name login
+POST {{identityUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "NirTester",
+  "passwordHash": "Test123456"
+}
+
+### שמירת הטוקן מהתגובה לשימוש אוטומטי בהמשך
+@authToken = {{login.response.body.token}}
+
+###
+
+### 3. צפייה בכל הנכסים (Resource Management - GET)
+# דרישה: פתוח לכל התפקידים עם טוקן תקין [cite: 20]
+GET {{resourceUrl}}/assets
+Authorization: Bearer {{authToken}}
+
+###
+
+### 4. הוספת נכס חדש (Resource Management - POST)
+# דרישה: הרשאת Admin בלבד ובידוד נתונים (MongoDB) [cite: 17, 21, 59]
+POST {{resourceUrl}}/assets
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "Nir's Office Desk",
+  "type": "Desk"
+}
+
+###
+
+### 5. בדיקת חסימה (ניסיון גישה ללא טוקן)
+# נועד לוודא שה-Middleware של ה-JWT עובד [cite: 18, 46]
+GET {{resourceUrl}}/assets
