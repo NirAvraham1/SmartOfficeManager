@@ -53,11 +53,7 @@ A distributed, **Enterprise-grade** microservices system designed for managing o
 **Issue:** Encountered `401 Unauthorized` and build errors (CS0029) due to mismatched user models (`User` vs `ApplicationUser`).
 **Solution:** Unified the domain models and used `[JsonPropertyName]` attributes to sync field naming between React (camelCase) and C# (PascalCase), ensuring perfect JSON serialization.
 
-### **3. SPA Routing & Docker Deployment**
-**Issue:** Hard-reloading the Dashboard resulted in Nginx 404 errors because the server was looking for physical files for client-side routes.
-**Solution:** Implemented **Conditional Rendering** based on the MobX state in `App.tsx`. This removed reliance on complex Nginx `try_files` rules and provided a faster, state-driven user experience.
-
-### **4. Database Race Conditions**
+### **3. Database Race Conditions**
 **Issue:** Microservices failed to start if the Backend reached out to databases before they were "Ready" in the Docker container.
 **Solution:** Developed a retry policy using **Exponential Backoff** (2s, 4s, 8s...) to ensure services wait gracefully for the infrastructure to stabilize.
 
