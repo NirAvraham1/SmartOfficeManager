@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -45,8 +47,9 @@ namespace IdentityAuthService.Controllers
 
             var cookieOptions = new CookieOptions {
                 HttpOnly = true,   
-                Secure = true,      
-                SameSite = SameSiteMode.Strict, 
+                Secure =false,      
+                SameSite = SameSiteMode.Lax, 
+                Path = "/",
                 Expires = DateTime.UtcNow.AddDays(7)
             };
 
@@ -67,6 +70,7 @@ namespace IdentityAuthService.Controllers
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
                     new Claim(ClaimTypes.Role, user.Role)
                 }),
                 Expires = DateTime.UtcNow.AddHours(7),
@@ -78,6 +82,33 @@ namespace IdentityAuthService.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        [HttpGet("me")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]        
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username)) return Unauthorized();
+
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null) return NotFound();
+
+            return Ok(new { user.Username, user.Role });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Path = "/"
+            });
+
+            return Ok(new { message = "Logged out successfully" });
         }
     }
 }

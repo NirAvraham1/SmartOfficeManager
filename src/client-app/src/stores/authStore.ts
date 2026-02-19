@@ -30,13 +30,27 @@ export default class AuthStore {
     };
 
     logout = async () => {
-        try {
-            runInAction(() => {
-                this.user = null;
-                window.location.href = '/';
-            });
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
+    try {
+        await agent.Auth.logout();
+        
+        runInAction(() => {
+            this.user = null;
+        });
+
+        window.location.href = '/'; 
+    } catch (error) {
+        console.error("Logout failed:", error);
+    }
+    }
+
+    getUser = async () => {
+    try {
+        const user = await agent.Auth.getCurrentUser();
+        runInAction(() => this.user = user);
+    } catch (error) {
+        console.log("No active session found");
+    } finally {
+        runInAction(() => this.loading = false);
+    }
+    }
 }

@@ -20,6 +20,8 @@ const requests = {
 const Auth = {
     login: (user: UserFormValues) => requests.post<User>(`${IDENTITY_URL}/auth/login`, user),
     register: (user: UserFormValues) => requests.post<void>(`${IDENTITY_URL}/auth/register`, user),
+    getCurrentUser: () => requests.get<User>(`${IDENTITY_URL}/auth/me`),
+    logout: () => requests.post<void>(`${IDENTITY_URL}/auth/logout`, {}),
 };
 
 const Assets = {

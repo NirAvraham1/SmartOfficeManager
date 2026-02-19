@@ -33,6 +33,22 @@ builder.Services.AddAuthentication(options => {
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Cookies["jwt"];
+        
+            if (string.IsNullOrEmpty(accessToken)) 
+             Console.WriteLine("--> Debug: No JWT cookie found in request.");
+            else 
+                Console.WriteLine("--> Debug: JWT cookie received successfully!");
+
+            context.Token = accessToken;
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddControllers();
