@@ -3,13 +3,14 @@ import type { AxiosResponse } from 'axios';
 import type { User, UserFormValues } from '../models/user';
 import type { Asset } from '../models/asset';
 
-const IDENTITY_URL = 'http://localhost:5197';
-const RESOURCE_URL = 'http://localhost:5259';
+// משיכת הכתובות מקובץ ה-ENV
+const IDENTITY_URL = import.meta.env.VITE_IDENTITY_URL;
+const RESOURCE_URL = import.meta.env.VITE_RESOURCE_URL;
 
+// הגדרה קריטית למשלוח Cookies באופן אוטומטי
 axios.defaults.withCredentials = true;
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data;
-
 
 const requests = {
     get: <T>(url: string) => axios.get<T>(url).then(responseBody),
